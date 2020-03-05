@@ -1,5 +1,10 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QComboBox, QLineEdit
+from apscheduler.schedulers.background import BackgroundScheduler
+
+from delete_texts_job import delete_texts
 from models import Text, List, db
+
+scheduler = BackgroundScheduler()
 
 db.create_tables([Text, List])
 
@@ -63,15 +68,17 @@ def on_select_list():
     texts.clear()
     list_name = lists.currentText()
     list_model = List.get(name=list_name)
-    print('--------------')
+
     for txt_model in list_model.texts:
         texts.addItem(txt_model.text)
-    print('########')
-    # texts.addItems()
+
 
 
 lists.currentTextChanged.connect(on_select_list)
 add_list_btn.clicked.connect(list_create)
 button1.clicked.connect(on_button1_click)
 button2.clicked.connect(on_button2_click)
+
+scheduler.add_job(delete_texts, 'interval', seconds=10, args=(texts,))
+scheduler.start()
 app.exec()
